@@ -20,19 +20,19 @@ let running = false;
 
 restartBtn.addEventListener('click', restartGame);
 
-
 initGame();
 
-function initGame(){
+function initGame() {
     cells.forEach(cell => {
         cell.textContent="";
         cell.addEventListener('click', cellClicked)
     });
+
     statusText.textContent = `${currentPlayer}'s turn`;
     running = true;
 }
 
-function cellClicked(){
+function cellClicked() {
     const cellIndex = this.getAttribute("cellIndex");
     if(options[cellIndex] !== "" || !running) {
         return;
@@ -42,12 +42,12 @@ function cellClicked(){
     checkWinner();
 }
 
-function updateCell(cell, index){
+function updateCell(cell, index) {
     options[index] = currentPlayer;
     cell.textContent = currentPlayer;
 }
 
-function changePlayer(){
+function changePlayer() {
     if (currentPlayer === user) {
         currentPlayer = computer;
     } else {
@@ -56,7 +56,7 @@ function changePlayer(){
     statusText.textContent = `${currentPlayer}'s turn`;
 }
 
-function checkWinner(){
+function checkWinner() {
     let roundWon = false;
     for(const condition of winConditions){
         const sliceCells = [
@@ -87,7 +87,7 @@ function checkWinner(){
     }
 }
 
-function restartGame(){
+function restartGame() {
     currentPlayer = user;
     options = Array.from({length: 9}, (_) => "");
     initGame();
