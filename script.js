@@ -12,21 +12,20 @@ const winConditions = [
     [2,4,6],
 ];
 
-// let options = Array.from({length: 9}, (_) => "");
-let options =["X", "O", "X", "O", "", "", "", "", ""];
+let options = Array.from({length: 9}, (_) => "");
 const user = "X";
 const computer = "O";
 let currentPlayer = user;
 let running = false;
-let winner = '';
 
 restartBtn.addEventListener('click', restartGame);
 
+//CODIGO DE TIC TAC TOE 
 
 initGame();
 
 function initGame(){
-    for(let i = 0;i < cells.length; i++){
+    for(let i = 0; i < cells.length; i++){
         cells[i].textContent = options[i];
         cells[i].addEventListener('click', cellClicked);
     }
@@ -46,11 +45,7 @@ function cellClicked(){
 }
 
 function updateCell(cell, index){
-    console.log('updateCell called')
     options[index] = currentPlayer;
-    // console.log("options: ", options);
-    // console.log("index: ", index);
-
     cell.textContent = currentPlayer;
 }
 
@@ -59,25 +54,28 @@ function changePlayer(){
     if (currentPlayer === user) {
         //computer's turn
         currentPlayer = computer;
-        aiPlayer(options);
+        statusText.textContent = `${currentPlayer}'s turn`;
+        setTimeout(()=>{ 
+            let { moveIndex } = minimax(options, 0, true);
+            updateCell(cells[moveIndex], moveIndex);
+            checkWinner();
+        },400)
+
     } else {
-
         currentPlayer = user;
+        statusText.textContent = `${currentPlayer}'s turn`;
     }
-
-
-    statusText.textContent = `${currentPlayer}'s turn`;
 }
 
 function checkWinner(){
     console.log('checkwinner called')
     let roundWon = false;
 
-    for(const condition of winConditions){
+    for(let i = 0; i < winConditions.length; i++){
         const sliceCells = [
-            options[condition[0]],
-            options[condition[1]],
-            options[condition[2]],
+            options[winConditions[i][0]],
+            options[winConditions[i][1]],
+            options[winConditions[i][2]]
         ]
 
         if (sliceCells.includes("")) {
@@ -92,11 +90,9 @@ function checkWinner(){
     console.log('roundWon:', roundWon);
 
     if(roundWon){
-        winner = currentPlayer;
-        statusText.textContent = `${winner} wins!!`;
+        statusText.textContent = `${currentPlayer} wins!!`;
         running = false;
     } else if(!options.includes("")){
-        winner = 'tie';
         statusText.textContent = `It's a tie!`
     } else {
         changePlayer();
@@ -110,126 +106,83 @@ function restartGame(){
 
 }
 
-
-function aiPlayer(board) {
-    console.log('aiplayer called')
-    let bestScore = -Infinity;
-    let bestMove;
-
-    for(let i = 0; i < board.length; i++) {
-        if(board[i] === '') {            
-            board[i] = computer;
-            let localScore = minimax(board, 0, true);
-            console.log(`localScore:`, localScore)
-
-            //reset
-            board[i] = "";
-            console.log(`localMove:`, i);
-            
-            if(localScore > bestScore){
-
-                bestScore = localScore;
-                bestMove = i;
-            }
-        }
-    }
-
-    board[bestMove] = computer;
-    updateCell(cells[bestMove], bestMove);
-    setTimeout(() => {
-        checkWinner();
-    }, 0);
-
-}
-
-const score = {
-    O: 1,
-    X: -1,
-    tie: 0
-};
-
-
-function aicheck(board){
-    console.log('aicheck called')
-    let roundWon = false;
-
-    for(const condition of winConditions){
-        const sliceCells = [
-            board[condition[0]],
-            board[condition[1]],
-            board[condition[2]],
-        ]
-
-        console.log(sliceCells)
-
-        if (sliceCells.includes("")) {
-            continue;
-        }
-
-        if(sliceCells[0] == sliceCells[1] && sliceCells[1] == sliceCells[2]){
-            roundWon = true;
-            break;
-        }
-    }
-    
-    console.log('roundWon:', roundWon);
-
-    if(roundWon){
-        return ''
-    } else if(!options.includes("")){
-        return 'tie';
-    } else {
-        return null;
-    }
-}
-
+// CODIGO DE IA
 
 function minimax(board, depth, ismax){
-    console.log(depth, ismax ? 'MAXIMIZING' : 'MINIMIZING', 'BOARD:', board);
+   //console.log(depth, ismax ? 'MAXIMIZING' : 'MINIMIZING', 'BOARD:', board);
+    let result = aicheck(board);
 
-    // let localWinner = aicheck(board);
-
-    if(winner !== '') {
-        console.log(`current winner:`, score[localWinner]);
-       return score[localWinner];
-    }
+    if(result !== undefined) {
+        return {score: result};
+    } 
 
     if(ismax){
-        let maxScore = -Infinity;
+        let bestScore = -Infinity;
+        let bestMove;   
 
         for(let i=0; i < board.length; i++) {
             if(board[i] === '') {
-                board[i] = user;
-                let localScore = minimax([...board], depth + 1, false);
-                console.log(`local score:`, localScore)
+                board[i] = "O";
+                const localScore = minimax(board, depth + 1, false).score;
                 //reset
                 board[i] = "";
+                //console.log(`local score:`, localScore)
                 
-                if(localScore > maxScore){
-                    maxScore = localScore;
+                if(localScore > bestScore){
+                    bestScore = localScore;
+                    bestMove = i;
+                    //console.log(`best score:`, bestScore, `best move:`, bestMove)
                 }
             } 
         }
-        console.log(depth, 'RETURNING FROM MAXIMIZING');
-        return maxScore;
+        //console.log(depth, 'RETURNING FROM MAXIMIZING');
+        return { score: bestScore, moveIndex: bestMove };
         
     } else {
-        let minScore = Infinity;
+        let bestScore = Infinity;
+        let bestMove;
 
         for(let i=0; i < board.length; i++) {
             if(board[i] === '') {
-                board[i] = computer;
-                let localScore = minimax([...board], depth + 1, true);
+                board[i] = "X";
+                const localScore = minimax(board, depth + 1, true).score;
                 
                 //reset
                 board[i] = "";
-                if(localScore < minScore){
-                    minScore = localScore;
+                //console.log(`local score:`, localScore)
+
+                if(localScore < bestScore){
+                    bestScore = localScore;
+                    bestMove = i;
+                    //console.log(`best score:`, bestScore, `best move:`, bestMove)
                 }
             }
         }
-        console.log(depth, 'RETURNING FROM MAXIMIZING');
-        return minScore;
+        //console.log(depth, 'RETURNING FROM MINIMIZING');
+        return { score: bestScore, moveIndex: bestMove };
     }
 }
+
+
+function aicheck(board){
+    for(let i = 0; i < winConditions.length; i++){
+        const sliceCells = [
+            board[winConditions[i][0]],
+            board[winConditions[i][1]],
+            board[winConditions[i][2]]
+        ]
+
+        const userWins = sliceCells.every(cell => cell === 'X');
+        const aiWins = sliceCells.every(cell => cell === 'O');
+
+        if(userWins) {
+            return -1;
+        } else if(aiWins) { 
+            return 1;
+        } else if(!board.includes('')) {
+            return 0;
+        }
+    }
+}
+
 
