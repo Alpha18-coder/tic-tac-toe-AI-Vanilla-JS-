@@ -175,5 +175,3 @@ function aicheck(board){
         }
     }
 }
-
-
