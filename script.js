@@ -19,8 +19,10 @@ let currentPlayer = user;
 let running = false;
 
 restartBtn.addEventListener('click', restartGame);
+//CODIGO DE TIC TAC TOE 
 
 initGame();
+
 
 function initGame() {
     cells.forEach(cell => {
@@ -49,20 +51,29 @@ function updateCell(cell, index) {
 
 function changePlayer() {
     if (currentPlayer === user) {
+        //computer's turn
         currentPlayer = computer;
+        statusText.textContent = `${currentPlayer}'s turn`;
+        setTimeout(()=>{ 
+            let { moveIndex } = minimax(options, 0, true);
+            updateCell(cells[moveIndex], moveIndex);
+            checkWinner();
+        },400)
+
     } else {
         currentPlayer = user;
+        statusText.textContent = `${currentPlayer}'s turn`;
     }
-    statusText.textContent = `${currentPlayer}'s turn`;
 }
 
 function checkWinner() {
     let roundWon = false;
-    for(const condition of winConditions){
+
+    for(let i = 0; i < winConditions.length; i++){
         const sliceCells = [
-            options[condition[0]],
-            options[condition[1]],
-            options[condition[2]],
+            options[winConditions[i][0]],
+            options[winConditions[i][1]],
+            options[winConditions[i][2]]
         ]
 
         if (sliceCells.includes("")) {
@@ -74,14 +85,13 @@ function checkWinner() {
             break;
         }
     }
+    console.log('roundWon:', roundWon);
 
     if(roundWon){
-        statusText.textContent = `${currentPlayer} wins!!`
+        statusText.textContent = `${currentPlayer} wins!!`;
         running = false;
-        return 'X';
     } else if(!options.includes("")){
         statusText.textContent = `It's a tie!`
-        return 'tie'
     } else {
         changePlayer();
     }
@@ -91,4 +101,79 @@ function restartGame() {
     currentPlayer = user;
     options = Array.from({length: 9}, (_) => "");
     initGame();
+
 }
+
+// CODIGO DE IA
+
+function minimax(board, depth, ismax){
+    let result = aicheck(board);
+
+    if(result !== undefined) {
+        return {score: result};
+    } 
+
+    if(ismax){
+        let bestScore = -Infinity;
+        let bestMove;   
+
+        for(let i=0; i < board.length; i++) {
+            if(board[i] === '') {
+                board[i] = "O";
+                const localScore = minimax(board, depth + 1, false).score;
+                //reset
+                board[i] = "";
+                
+                if(localScore > bestScore){
+                    bestScore = localScore;
+                    bestMove = i;
+                }
+            } 
+        }
+        return { score: bestScore, moveIndex: bestMove };
+        
+    } else {
+        let bestScore = Infinity;
+        let bestMove;
+
+        for(let i=0; i < board.length; i++) {
+            if(board[i] === '') {
+                board[i] = "X";
+                const localScore = minimax(board, depth + 1, true).score;
+                
+                //reset
+                board[i] = "";
+
+                if(localScore < bestScore){
+                    bestScore = localScore;
+                    bestMove = i;
+                }
+            }
+        }
+        return { score: bestScore, moveIndex: bestMove };
+    }
+}
+
+
+function aicheck(board){
+    for(let i = 0; i < winConditions.length; i++){
+        const sliceCells = [
+            board[winConditions[i][0]],
+            board[winConditions[i][1]],
+            board[winConditions[i][2]]
+        ]
+
+        const userWins = sliceCells.every(cell => cell === 'X');
+        const aiWins = sliceCells.every(cell => cell === 'O');
+
+        if(userWins) {
+            return -1;
+        } else if(aiWins) { 
+            return 1;
+        } else if(!board.includes('')) {
+            return 0;
+        }
+    }
+}
+
+
